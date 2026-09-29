@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>TicketDesk</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header>
+
+    <h1>TicketDesk</h1>
+
+    <p>
+        Campus Movie / Show Ticket Booking System
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- =================================================
+         CREATE SHOW
+    ================================================== -->
+
+    <section class="card">
+
+        <h2>Create Show</h2>
+
+        <form id="showForm">
+
+            <label>Show Title</label>
+
+            <input
+                    type="text"
+                    id="showTitle"
+                    placeholder="Enter movie/show name"
+                    required
+            >
+
+
+            <label>Show Time</label>
+
+            <input
+                    type="datetime-local"
+                    id="showTime"
+                    required
+            >
+
+
+            <label>Total Seats</label>
+
+            <input
+                    type="number"
+                    id="totalSeats"
+                    placeholder="Enter total seats"
+                    min="1"
+                    required
+            >
+
+
+            <button type="submit">
+                Create Show
+            </button>
+
+        </form>
+
+
+        <p id="showMessage"></p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         SHOW LIST
+    ================================================== -->
+
+    <section class="card">
+
+        <h2>Available Shows</h2>
+
+        <button type="button" onclick="loadShows()">
+            Refresh Shows
+        </button>
+
+
+        <div id="showList">
+
+            <p>
+                Click "Refresh Shows" to view shows.
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         STUDENT REGISTRATION
+    ================================================== -->
+
+    <section class="card">
+
+        <h2>Student Registration</h2>
+
+        <form id="studentForm">
+
+
+            <label>Student Name</label>
+
+            <input
+                    type="text"
+                    id="studentName"
+                    placeholder="Enter student name"
+                    required
+            >
+
+
+            <label>Email</label>
+
+            <input
+                    type="email"
+                    id="studentEmail"
+                    placeholder="Enter email"
+                    required
+            >
+
+
+            <button type="submit">
+                Register Student
+            </button>
+
+        </form>
+
+
+        <p id="studentMessage"></p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         BOOK TICKETS
+    ================================================== -->
+
+    <section class="card">
+
+        <h2>Book Tickets</h2>
+
+        <form id="bookingForm">
+
+
+            <label>Student ID</label>
+
+            <input
+                    type="number"
+                    id="studentId"
+                    placeholder="Enter Student ID"
+                    min="1"
+                    required
+            >
+
+
+            <label>Show ID</label>
+
+            <input
+                    type="number"
+                    id="bookingShowId"
+                    placeholder="Enter Show ID"
+                    min="1"
+                    required
+            >
+
+
+            <label>Number of Seats</label>
+
+            <input
+                    type="number"
+                    id="bookingSeats"
+                    placeholder="Enter number of seats"
+                    min="1"
+                    required
+            >
+
+
+            <button type="submit">
+                Book Tickets
+            </button>
+
+        </form>
+
+
+        <p id="bookingMessage"></p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         AVAILABLE SEATS
+    ================================================== -->
+
+    <section class="card">
+
+        <h2>Check Available Seats</h2>
+
+
+        <input
+                type="number"
+                id="availableShowId"
+                placeholder="Enter Show ID"
+                min="1"
+        >
+
+
+        <button
+                type="button"
+                onclick="checkAvailableSeats()"
+        >
+            Check Seats
+        </button>
+
+
+        <p id="availableSeats"></p>
+
+    </section>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+    <p>
+        TicketDesk - Student Project
+    </p>
+
+</footer>
+
+
+
+<script>
+
+
+    /* =====================================================
+       BACKEND URL
+    ===================================================== */
+
+    const API = (window.location.protocol.startsWith("http") && window.location.port === "8080")
+        ? ""
+        : "http://localhost:8080";
+
+
+
+    /* =====================================================
+       CREATE SHOW
+    ===================================================== */
+
+    document
+        .getElementById("showForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+
+            const title =
+                document.getElementById("showTitle").value;
+
+            const showTime =
+                document.getElementById("showTime").value;
+
+            const totalSeats =
+                parseInt(
+                    document.getElementById("totalSeats").value
+                );
+
+
+            const show = {
+
+                title: title,
+
+                showTime: showTime,
+
+                totalSeats: totalSeats
+
+            };
+
+
+            try {
+
+                const response = await fetch(
+                    API + "/api/shows",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify(show)
+                    }
+                );
+
+
+                const text = await response.text();
+
+
+                let data;
+
+                try {
+
+                    data = JSON.parse(text);
+
+                } catch {
+
+                    data = {
+                        message: text
+                    };
+
+                }
+
+
+                if (response.ok) {
+
+                    document
+                        .getElementById("showMessage")
+                        .innerText =
+                        "Show created successfully!";
+
+
+                    document
+                        .getElementById("showForm")
+                        .reset();
+
+
+                    loadShows();
+
+                } else {
+
+                    document
+                        .getElementById("showMessage")
+                        .innerText =
+                        data.message ||
+                        "Error creating show.";
+
+                }
+
+            } catch (error) {
+
+                document
+                    .getElementById("showMessage")
+                    .innerText =
+                    "Cannot connect to Spring Boot.";
+
+            }
+
+        });
+
+
+
+    /* =====================================================
+       LOAD ALL SHOWS
+    ===================================================== */
+
+    async function loadShows() {
+
+        try {
+
+            const response =
+                await fetch(API + "/api/shows");
+
+
+            const text =
+                await response.text();
+
+
+            let shows;
+
+
+            try {
+
+                shows = JSON.parse(text);
+
+            } catch {
+
+                shows = [];
+
+            }
+
+
+            const showList =
+                document.getElementById("showList");
+
+
+            showList.innerHTML = "";
+
+
+            if (!response.ok) {
+
+                showList.innerHTML =
+                    "<p>Unable to load shows.</p>";
+
+                return;
+
+            }
+
+
+            if (shows.length === 0) {
+
+                showList.innerHTML =
+                    "<p>No shows available.</p>";
+
+                return;
+
+            }
+
+
+            shows.forEach(function(show) {
+
+
+                const div =
+                    document.createElement("div");
+
+
+                div.className =
+                    "show-item";
+
+
+                div.innerHTML = `
+
+                <h3>${show.title}</h3>
+
+                <p>
+                    <b>Show ID:</b>
+                    ${show.id}
+                </p>
+
+                <p>
+                    <b>Show Time:</b>
+                    ${show.showTime}
+                </p>
+
+                <p>
+                    <b>Total Seats:</b>
+                    ${show.totalSeats}
+                </p>
+
+            `;
+
+
+                showList.appendChild(div);
+
+            });
+
+
+        } catch (error) {
+
+            document
+                .getElementById("showList")
+                .innerHTML =
+                "<p>Cannot connect to Spring Boot.</p>";
+
+        }
+
+    }
+
+
+
+    /* =====================================================
+       REGISTER STUDENT
+    ===================================================== */
+
+    document
+        .getElementById("studentForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+
+            const name =
+                document.getElementById("studentName").value.trim();
+
+
+            const email =
+                document.getElementById("studentEmail").value.trim();
+
+
+            try {
+
+                const student = {
+                    name: name,
+                    email: email
+                };
+
+                const response =
+                    await fetch(
+                        API + "/api/students",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(student)
+                        }
+                    );
+
+
+                const text =
+                    await response.text();
+
+
+                let data;
+
+
+                try {
+
+                    data = JSON.parse(text);
+
+                } catch {
+
+                    data = {
+                        message: text
+                    };
+
+                }
+
+
+                if (response.ok) {
+
+
+                    document
+                        .getElementById("studentMessage")
+                        .innerText =
+                        "Student registered successfully!" +
+                        (data.id
+                            ? " Student ID: " + data.id
+                            : "");
+
+
+                    document
+                        .getElementById("studentForm")
+                        .reset();
+
+
+                } else {
+
+
+                    document
+                        .getElementById("studentMessage")
+                        .innerText =
+                        data.message ||
+                        "Student registration failed.";
+
+                }
+
+
+            } catch (error) {
+
+
+                document
+                    .getElementById("studentMessage")
+                    .innerText =
+                    "Cannot connect to Spring Boot.";
+
+            }
+
+        });
+
+
+
+    /* =====================================================
+       CREATE BOOKING
+    ===================================================== */
+
+    document
+        .getElementById("bookingForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+
+            const studentId =
+                document.getElementById("studentId").value;
+
+
+            const showId =
+                document.getElementById("bookingShowId").value;
+
+
+            const seats =
+                document.getElementById("bookingSeats").value;
+
+
+            try {
+
+
+                /*
+                 * IMPORTANT
+                 *
+                 * BookingController uses:
+                 *
+                 * @RequestParam Long studentId
+                 * @RequestParam Long showId
+                 * @RequestParam Integer seats
+                 *
+                 * Therefore DO NOT send JSON.
+                 *
+                 * Send parameters in URL.
+                 */
+
+
+                const url =
+                    API +
+                    "/api/bookings" +
+                    "?studentId=" +
+                    encodeURIComponent(studentId) +
+                    "&showId=" +
+                    encodeURIComponent(showId) +
+                    "&seats=" +
+                    encodeURIComponent(seats);
+
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+                            method: "POST"
+                        }
+                    );
+
+
+                const text =
+                    await response.text();
+
+
+                let data;
+
+
+                try {
+
+                    data = JSON.parse(text);
+
+                } catch {
+
+                    data = {
+                        message: text
+                    };
+
+                }
+
+
+                if (response.ok) {
+
+
+                    document
+                        .getElementById("bookingMessage")
+                        .innerText =
+                        "Booking successful!" +
+                        (data.id
+                            ? " Booking ID: " + data.id
+                            : "");
+
+
+                    document
+                        .getElementById("bookingForm")
+                        .reset();
+
+
+                } else {
+
+
+                    document
+                        .getElementById("bookingMessage")
+                        .innerText =
+                        data.message ||
+                        "Booking failed.";
+
+                }
+
+
+            } catch (error) {
+
+
+                document
+                    .getElementById("bookingMessage")
+                    .innerText =
+                    "Cannot connect to Spring Boot.";
+
+            }
+
+        });
+
+
+
+    /* =====================================================
+       CHECK AVAILABLE SEATS
+    ===================================================== */
+
+    async function checkAvailableSeats() {
+
+
+        const showId =
+            document
+                .getElementById("availableShowId")
+                .value;
+
+
+        if (!showId) {
+
+            document
+                .getElementById("availableSeats")
+                .innerText =
+                "Please enter Show ID.";
+
+            return;
+
+        }
+
+
+        try {
+
+
+            const response =
+                await fetch(
+                    API +
+                    "/api/bookings/show/" +
+                    showId +
+                    "/available-seats"
+                );
+
+
+            const text =
+                await response.text();
+
+
+            if (response.ok) {
+
+
+                document
+                    .getElementById("availableSeats")
+                    .innerText =
+                    "Available seats: " + text;
+
+
+            } else {
+
+
+                let data;
+
+
+                try {
+
+                    data = JSON.parse(text);
+
+                } catch {
+
+                    data = {
+                        message: text
+                    };
+
+                }
+
+
+                document
+                    .getElementById("availableSeats")
+                    .innerText =
+                    data.message ||
+                    "Unable to check seats.";
+
+            }
+
+
+        } catch (error) {
+
+
+            document
+                .getElementById("availableSeats")
+                .innerText =
+                "Cannot connect to Spring Boot.";
+
+        }
+
+    }
+
+
+    /* Automatically load shows when page loads */
+    window.addEventListener("DOMContentLoaded", function() {
+        loadShows();
+    });
+
+
+</script>
+
+</body>
+
+</html>
